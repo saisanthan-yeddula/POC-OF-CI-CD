@@ -2,13 +2,13 @@ name: CI/CD POC
 
 on:
   push:
-    branches: [ main, dev ]
+    branches: [ prod, dev ]
   pull_request:
-    branches: [ main, dev ]
+    branches: [ prod, dev ]
 
 jobs:
-  build-and-deploy:
-    runs-on: self-hosted
+  test-and-build:
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
@@ -24,15 +24,30 @@ jobs:
         cd backend
         npm install
 
+    - name: Run Backend Tests
+      run: |
+        cd backend
+        # Note: In a real CI, you'd use a secret for MONGODB_URL
+        # For this POC test, we'll use a dummy URL or mock the DB
+        npm test
+      env:
+        MONGODB_URL: ${{ secrets.MONGODB_URL || 'mongodb://localhost:27017/test' }}
+        NODE_ENV: test
+
     - name: Install Frontend Dependencies
       run: |
         cd frontend
         npm install
+
+    - name: Run Frontend Tests
+      run: |
+        cd frontend
+        npm test
 
     - name: Build Frontend
       run: |
         cd frontend
         npm run build
 
-    - name: Deploy Message
-      run: echo "Build successful on local runner!"
+    - name: Success Message
+      run: echo "Tests passed and Build successful on GitHub-hosted runner!"
